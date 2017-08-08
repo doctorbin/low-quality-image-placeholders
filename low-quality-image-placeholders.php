@@ -43,7 +43,6 @@ if ( ! function_exists( 'lqip_plugin_setup' ) ) {
             </div>
 		<?php }
 
-
 		/**
 		 * Get size information for all currently-registered image sizes.
 		 *
@@ -88,19 +87,26 @@ if ( ! function_exists( 'lqip_plugin_setup' ) ) {
 		function modify_post_thumbnail_html( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
 			$id       = get_post_thumbnail_id(); // gets the id of the current post_thumbnail (in the loop)
 			$data_src = wp_get_attachment_image_src( $id, $size ); // gets the image url specific to the passed in size (aka. custom image size)
-			$src      = wp_get_attachment_image_src( $id, 'lqip_' . $size ); // gets the LQIP image url specific to the passed in size (aka. custom image size)
-            if ( !$src ) {
-	            $src = $data_src;
-            }
+			if ( is_array( $size ) ) {
+				$src = wp_get_attachment_image_src( $id, array( $size[0] / 10, $size[1] / 10 ) );
+			} else {
+				$src = wp_get_attachment_image_src( $id, 'lqip_' . $size ); // gets the LQIP image url specific to the passed in size (aka. custom image size)
+				if ( ! $src ) {
+					$src = $data_src;
+				}
+			}
 			$alt   = get_the_title( $id ); // gets the post thumbnail title
 			$class = $attr['class'];
 
-			$html = '<img src="' . $src[0] . '" alt="" data-src="' . $data_src[0] . '" alt="' . $alt . '" class="' . $class . ' lqip_img" width="' . $data_src[1] . '" height="' . $data_src[2] . '"/>';
+			$html = '<img src="' . $src[0] . '" alt="" data-src="' . $data_src[0] . '" alt="' . $alt . '" class="' . $class . $size . ' lqip_img" width="' . $data_src[1] . '" height="' . $data_src[2] . '"/>';
 
 			return $html;
 		}
 	}
 }
+
+// add the filter
+add_filter( 'image_send_to_editor', 'filter_image_send_to_editor', 10, 8 );
 
 add_action( 'wp_footer', 'lqip_bin_wp_footer' );
 
